@@ -1,0 +1,110 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model authorization_actions {
+  dept_no     String      @db.Char(4)
+  action      String      @db.VarChar(100)
+  departments departments @relation(fields: [dept_no], references: [dept_no], onDelete: Cascade, onUpdate: NoAction, map: "authorization_actions_ibfk_1")
+
+  @@id([dept_no, action])
+}
+
+model departments {
+  dept_no               String                  @id @db.Char(4)
+  dept_name             String                  @unique(map: "dept_name") @db.VarChar(40)
+  authorization_actions authorization_actions[]
+  dept_emp              dept_emp[]
+  dept_manager          dept_manager[]
+  users                 users[]
+}
+
+model dept_emp {
+  emp_no      Int
+  dept_no     String      @db.Char(4)
+  from_date   DateTime    @db.Date
+  to_date     DateTime    @db.Date
+  employees   employees   @relation(fields: [emp_no], references: [emp_no], onDelete: Cascade, onUpdate: NoAction, map: "dept_emp_ibfk_1")
+  departments departments @relation(fields: [dept_no], references: [dept_no], onDelete: Cascade, onUpdate: NoAction, map: "dept_emp_ibfk_2")
+
+  @@id([emp_no, dept_no])
+  @@index([dept_no], map: "dept_no")
+}
+
+model dept_manager {
+  emp_no      Int
+  dept_no     String      @db.Char(4)
+  from_date   DateTime    @db.Date
+  to_date     DateTime    @db.Date
+  employees   employees   @relation(fields: [emp_no], references: [emp_no], onDelete: Cascade, onUpdate: NoAction, map: "dept_manager_ibfk_1")
+  departments departments @relation(fields: [dept_no], references: [dept_no], onDelete: Cascade, onUpdate: NoAction, map: "dept_manager_ibfk_2")
+
+  @@id([emp_no, dept_no])
+  @@index([dept_no], map: "dept_no")
+}
+
+model employee_images {
+  emp_no      Int
+  image_path  String    @db.VarChar(255)
+  upload_date DateTime  @db.Date
+  employees   employees @relation(fields: [emp_no], references: [emp_no], onDelete: Cascade, onUpdate: NoAction, map: "employee_images_ibfk_1")
+
+  @@id([emp_no, image_path])
+}
+
+model employees {
+  emp_no          Int               @id @default(autoincrement())
+  birth_date      DateTime          @db.Date
+  first_name      String            @db.VarChar(14)
+  last_name       String            @db.VarChar(16)
+  gender          employees_gender
+  hire_date       DateTime          @db.Date
+  dept_emp        dept_emp[]
+  dept_manager    dept_manager[]
+  employee_images employee_images[]
+  salaries        salaries[]
+  titles          titles[]
+  users           users[]
+}
+
+model salaries {
+  emp_no    Int
+  salary    Int
+  from_date DateTime  @db.Date
+  to_date   DateTime  @db.Date
+  employees employees @relation(fields: [emp_no], references: [emp_no], onDelete: Cascade, onUpdate: NoAction, map: "salaries_ibfk_1")
+
+  @@id([emp_no, from_date])
+}
+
+model titles {
+  emp_no    Int
+  title     String    @db.VarChar(50)
+  from_date DateTime  @db.Date
+  to_date   DateTime? @db.Date
+  employees employees @relation(fields: [emp_no], references: [emp_no], onDelete: Cascade, onUpdate: NoAction, map: "titles_ibfk_1")
+
+  @@id([emp_no, title, from_date])
+}
+
+model users {
+  emp_no            Int
+  emp_email_address String      @db.VarChar(255)
+  emp_password      String      @db.VarChar(255)
+  dept_no           String      @db.Char(4)
+  employees         employees   @relation(fields: [emp_no], references: [emp_no], onDelete: Cascade, onUpdate: NoAction, map: "users_ibfk_1")
+  departments       departments @relation(fields: [dept_no], references: [dept_no], onDelete: Cascade, onUpdate: NoAction, map: "users_ibfk_2")
+
+  @@id([emp_no, emp_email_address])
+  @@index([dept_no], map: "dept_no")
+}
+
+enum employees_gender {
+  M
+  F
+}
